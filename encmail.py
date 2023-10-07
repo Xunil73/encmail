@@ -10,6 +10,11 @@
 
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout
 import sys
+from email.mime.text import MIMEText
+from email.header import Header
+import smtplib
+import keyring
+import gnupg
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -32,10 +37,28 @@ class MainWindow(QMainWindow):
         self.button.clicked.connect(self.on_clicked)
 
     def on_clicked(self):
-        var = self.textBrowser.toPlainText()
-        self.textBrowser.setText("Button was clicked")
-        print(var)
+        gpg = gnupg.GPG(gnupghome='/home/harry/.gnupg')
 
+        msg_raw = self.textBrowser.toPlainText()
+        self.textBrowser.clear()
+        msg_data = gpg.encrypt(msg_raw, 'harald.seiler@aikq.de')
+        msg = str(msg_data)
+        subj = '...'
+        frm = 'harald.seiler@aikq.de'
+        to = 'dj5my@ok.de'
+
+        mail = MIMEText(msg, 'plain', 'utf-8')
+        mail['Subject'] = Header(subj, 'utf-8')
+        mail['From'] = frm
+        mail['To'] = to
+
+        smtp = smtplib.SMTP('smtp.aikq.de')
+        smtp.starttls()
+        smtp.login('harald.seiler@aikq.de', keyring.get_password("email","harald.seiler@aikq.de"))
+        smtp.sendmail(frm, [to], mail.as_string())
+        smtp.quit()
+        app.quit()
+        
 
 app = QApplication(sys.argv)
 
