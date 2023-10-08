@@ -6,6 +6,11 @@
 # https://www.pythonguis.com/tutorials/pyside6-creating-your-first-window/
 # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html
 
+gnupg_dir = '/home/harry/.gnupg'
+email_login_name = 'harald.seiler@aikq.de'
+email_server = 'smtp.aikq.de'
+key_user = 'harald.seiler@aikq.de'
+email_recipient = 'dj5my@ok.de'
 
 
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout
@@ -15,6 +20,7 @@ from email.header import Header
 import smtplib
 import keyring
 import gnupg
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -37,24 +43,24 @@ class MainWindow(QMainWindow):
         self.button.clicked.connect(self.on_clicked)
 
     def on_clicked(self):
-        gpg = gnupg.GPG(gnupghome='/home/harry/.gnupg')
+        gpg = gnupg.GPG(gnupghome=gnupg_dir)
 
         msg_raw = self.textBrowser.toPlainText()
         self.textBrowser.clear()
-        msg_data = gpg.encrypt(msg_raw, 'harald.seiler@aikq.de')
+        msg_data = gpg.encrypt(msg_raw, key_user)
         msg = str(msg_data)
         subj = '...'
-        frm = 'harald.seiler@aikq.de'
-        to = 'dj5my@ok.de'
+        frm = email_login_name
+        to = email_recipient
 
         mail = MIMEText(msg, 'plain', 'utf-8')
         mail['Subject'] = Header(subj, 'utf-8')
         mail['From'] = frm
         mail['To'] = to
 
-        smtp = smtplib.SMTP('smtp.aikq.de')
+        smtp = smtplib.SMTP(email_server)
         smtp.starttls()
-        smtp.login('harald.seiler@aikq.de', keyring.get_password("email","harald.seiler@aikq.de"))
+        smtp.login('harald.seiler@aikq.de', keyring.get_password("email", email_login_name))
         smtp.sendmail(frm, [to], mail.as_string())
         smtp.quit()
         app.quit()
