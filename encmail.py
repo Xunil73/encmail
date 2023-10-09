@@ -13,7 +13,9 @@ key_user = 'harald.seiler@aikq.de'
 email_recipient = 'dj5my@ok.de'
 
 
-from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QMessageBox
+from PySide6.QtCore import QObject
+from PySide6.QtGui import QTextDocument
 import sys
 from email.mime.text import MIMEText
 from email.header import Header
@@ -41,6 +43,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.centralWidget)
 
         self.button.clicked.connect(self.on_clicked)
+        self.textBrowser.textChanged.connect(self.on_text_changed)
+
 
     def on_clicked(self):
         gpg = gnupg.GPG(gnupghome=gnupg_dir)
@@ -65,6 +69,17 @@ class MainWindow(QMainWindow):
         smtp.quit()
         app.quit()
         
+    def on_text_changed(self):
+        gpg = gnupg.GPG(gnupghome=gnupg_dir)
+        compare_str = '-----BEGIN PGP MESSAGE-----'
+        if self.textBrowser.find(compare_str, QTextDocument.FindBackward) :
+            encrypted_msg = self.textBrowser.toPlainText()
+            decrypted_msg = gpg.decrypt(encrypted_msg)
+            msgbox = QMessageBox()
+            msgbox.setText(str(decrypted_msg))
+            msgbox.show()
+            msgbox.exec()    
+            self.textBrowser.clear()    
 
 app = QApplication(sys.argv)
 
