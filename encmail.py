@@ -77,7 +77,8 @@ class MainWindow(QMainWindow):
             decrypted_msg = gpg.decrypt(encrypted_msg)
             msgbox = QMessageBox()
             msgbox.setWindowTitle('entschlüsselter Text:')
-            msgbox.setText(str(decrypted_msg))
+            # this is the only way to get the german umlauts working:
+            msgbox.setText(str(decrypted_msg).encode('latin-1').decode('latin-1'))
             msgbox.show()
             msgbox.exec()    
             self.textBrowser.clear()    
