@@ -61,14 +61,26 @@ class MainWindow(QMainWindow):
         mail['Subject'] = Header(subj, 'utf-8')
         mail['From'] = frm
         mail['To'] = to
-
-        smtp = smtplib.SMTP(email_server)
-        smtp.starttls()
-        smtp.login('harald.seiler@aikq.de', keyring.get_password("email", email_login_name))
-        smtp.sendmail(frm, [to], mail.as_string())
-        smtp.quit()
-        app.quit()
         
+        try:
+            smtp = smtplib.SMTP(email_server)
+            smtp.starttls()
+            smtp.login(email_login_name, keyring.get_password("email", email_login_name))
+            smtp.sendmail(frm, [to], mail.as_string())
+            smtp.quit()
+            app.quit()
+        except BaseException as e:
+            msgbox = QMessageBox()
+            msgbox.setWindowTitle('Fehler')
+            errormsg = "mailserver error\n" + str(e)
+            msgbox.setInformativeText(errormsg)
+            msgbox.setStandardButtons(QMessageBox.Cancel)
+            msgbox.setIcon(QMessageBox.Critical)
+            msgbox.show()
+            msgbox.exec()
+            app.quit()
+            
+
     def on_text_changed(self):
         gpg = gnupg.GPG(gnupghome=gnupg_dir)
         compare_str = '-----BEGIN PGP MESSAGE-----'
