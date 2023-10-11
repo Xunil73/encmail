@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("sichere Mail an Harry")
+        self.setWindowTitle("encrypted mail")
 
         self.button = QPushButton("sicher Senden")
         self.textBrowser = QTextEdit()
@@ -76,6 +76,7 @@ class MainWindow(QMainWindow):
             encrypted_msg = self.textBrowser.toPlainText()
             decrypted_msg = gpg.decrypt(encrypted_msg)
             msgbox = QMessageBox()
+            msgbox.setWindowTitle('entschlüsselter Text:')
             msgbox.setText(str(decrypted_msg))
             msgbox.show()
             msgbox.exec()    
