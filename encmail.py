@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
 
         smtp = smtplib.SMTP(email_server)
         smtp.starttls()
-        smtp.login('harald.seiler@aikq.de', keyring.get_password("email", email_login_name))
+        smtp.login(email_login_name, keyring.get_password("email", email_login_name))
         smtp.sendmail(frm, [to], mail.as_string())
         smtp.quit()
         app.quit()
