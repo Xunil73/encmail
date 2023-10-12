@@ -47,21 +47,32 @@ class MainWindow(QMainWindow):
 
 
     def on_clicked(self):
-        gpg = gnupg.GPG(gnupghome=gnupg_dir)
+        try:
+            gpg = gnupg.GPG(gnupghome=gnupg_dir)
 
-        msg_raw = self.textBrowser.toPlainText()
-        self.textBrowser.clear()
-        msg_data = gpg.encrypt(msg_raw, key_user)
-        msg = str(msg_data)
-        subj = '...'
-        frm = email_login_name
-        to = email_recipient
+            msg_raw = self.textBrowser.toPlainText()
+            self.textBrowser.clear()
+            msg_data = gpg.encrypt(msg_raw, key_user)
+            msg = str(msg_data)
+            subj = '...'
+            frm = email_login_name
+            to = email_recipient
 
-        mail = MIMEText(msg, 'plain', 'utf-8')
-        mail['Subject'] = Header(subj, 'utf-8')
-        mail['From'] = frm
-        mail['To'] = to
-        
+            mail = MIMEText(msg, 'plain', 'utf-8')
+            mail['Subject'] = Header(subj, 'utf-8')
+            mail['From'] = frm
+            mail['To'] = to
+        except ValueError as e:
+            msgbox = QMessageBox()
+            msgbox.setWindowTitle('Fehler')
+            errormsg = "GPG error:\n" + str(e)
+            msgbox.setInformativeText(errormsg)
+            msgbox.setStandardButtons(QMessageBox.Cancel)
+            msgbox.setIcon(QMessageBox.Critical)
+            msgbox.show()
+            msgbox.exec()
+            app.quit()
+
         try:
             smtp = smtplib.SMTP(email_server)
             smtp.starttls()
