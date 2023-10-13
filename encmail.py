@@ -8,8 +8,8 @@
 
 gnupg_dir = '/home/harry/.gnupg'
 email_login_name = 'harald.seiler@aikq.de'
-email_server = 'smtp.aikq.de'
 key_user = 'harald.seiler@aikq.de'
+email_server = 'smtp.aikq.de'
 email_recipient = 'dj5my@ok.de'
 
 
@@ -63,34 +63,18 @@ class MainWindow(QMainWindow):
             mail['From'] = frm
             mail['To'] = to
         except ValueError as e:
-            msgbox = QMessageBox()
-            msgbox.setWindowTitle('Fehler')
-            errormsg = "GPG error:\n" + str(e)
-            msgbox.setInformativeText(errormsg)
-            msgbox.setStandardButtons(QMessageBox.Cancel)
-            msgbox.setIcon(QMessageBox.Critical)
-            msgbox.show()
-            msgbox.exec()
-            app.quit()
-
+            errormsg = "gpg error:\n" + str(e)
+            self.show_exception_box(errormsg)
         try:
             smtp = smtplib.SMTP(email_server)
             smtp.starttls()
-            smtp.login(email_login_name, keyring.get_password("email", email_login_name))
+            smtp.login(email_login_name, keyring.get_password("email", key_user))
             smtp.sendmail(frm, [to], mail.as_string())
             smtp.quit()
             app.quit()
         except BaseException as e:
-            msgbox = QMessageBox()
-            msgbox.setWindowTitle('Fehler')
-            errormsg = "mailserver error\n" + str(e)
-            msgbox.setInformativeText(errormsg)
-            msgbox.setStandardButtons(QMessageBox.Cancel)
-            msgbox.setIcon(QMessageBox.Critical)
-            msgbox.show()
-            msgbox.exec()
-            app.quit()
-            
+            errormsg = "mailserver error\n" + str(e)            
+            self.show_exception_box(errormsg)
 
     def on_text_changed(self):
         gpg = gnupg.GPG(gnupghome=gnupg_dir)
@@ -104,6 +88,16 @@ class MainWindow(QMainWindow):
             msgbox.show()
             msgbox.exec()    
             self.textBrowser.clear()    
+
+    def show_exception_box(self, errormsg):
+        msgbox = QMessageBox()
+        msgbox.setWindowTitle('Fehler')
+        msgbox.setInformativeText(errormsg)
+        msgbox.setStandardButtons(QMessageBox.Cancel)
+        msgbox.setIcon(QMessageBox.Critical)
+        msgbox.show()
+        msgbox.exec()
+        app.quit()
 
 app = QApplication(sys.argv)
 
