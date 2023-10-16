@@ -9,8 +9,9 @@
 gnupg_dir = '/home/harry/.gnupg'
 email_login_name = 'harald.seiler@aikq.de'
 email_server = 'smtp.aikq.de'
-key_user = 'harald.seiler@aikq.de'
+key_user = email_login_name
 email_recipient = 'dj5my@ok.de'
+
 
 
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QMessageBox
@@ -51,7 +52,8 @@ class MainWindow(QMainWindow):
 
         msg_raw = self.textBrowser.toPlainText()
         self.textBrowser.clear()
-        msg_data = gpg.encrypt(msg_raw, key_user)
+        #sign_pw = keyring.get_password("gpg_aikq", key_user)
+        msg_data = gpg.encrypt(msg_raw, key_user, always_trust=True, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
         msg = str(msg_data)
         subj = '...'
         frm = email_login_name
