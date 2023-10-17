@@ -76,9 +76,14 @@ class MainWindow(QMainWindow):
         compare_str = '-----BEGIN PGP MESSAGE-----'
         if self.textBrowser.find(compare_str, QTextDocument.FindBackward) :
             encrypted_msg = self.textBrowser.toPlainText()
+            verified = gpg.verify(encrypted_msg)
             decrypted_msg = gpg.decrypt(encrypted_msg)
+            
             msgbox = QMessageBox()
-            msgbox.setWindowTitle('entschlüsselter Text:')
+            if decrypted_msg.trust_level is not None:
+                msgbox.setWindowTitle('gültige Signatur von\n: %s' % decrypted_msg.username)
+            else:
+                msgbox.setWindowTitle('Mail nicht signiert!')
             msgbox.setText(str(decrypted_msg))
             msgbox.show()
             msgbox.exec()    
