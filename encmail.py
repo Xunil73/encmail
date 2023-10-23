@@ -52,7 +52,6 @@ class MainWindow(QMainWindow):
 
         msg_raw = self.textBrowser.toPlainText()
         self.textBrowser.clear()
-        #sign_pw = keyring.get_password("gpg_aikq", key_user)
         msg_data = gpg.encrypt(msg_raw, key_user, always_trust=True, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
         msg = str(msg_data)
         subj = '...'
@@ -79,12 +78,18 @@ class MainWindow(QMainWindow):
             verified = gpg.verify(encrypted_msg)
             decrypted_msg = gpg.decrypt(encrypted_msg)
             
+            validSig = False
             msgbox = QMessageBox()
             if decrypted_msg.trust_level is not None:
-                msgbox.setWindowTitle('gültige Signatur von\n: %s' % decrypted_msg.username)
+                msgbox.setWindowTitle('%s' % decrypted_msg.username)     
+                validSig = True
             else:
-                msgbox.setWindowTitle('Mail nicht signiert!')
+                msgbox.setWindowTitle("Mail nicht signiert!")
             msgbox.setText(str(decrypted_msg))
+            if validSig:   
+                msgbox.setInformativeText("<font color=\"green\">gültige Signatur von:\n%s</font>" % decrypted_msg.username)
+            else:
+                msgbox.setInformativeText("<font color=\"red\">Mail nicht signiert!</font>")
             msgbox.show()
             msgbox.exec()    
             self.textBrowser.clear()    
