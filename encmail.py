@@ -9,8 +9,9 @@
 gnupg_dir = '/home/harry/.gnupg'
 email_login_name = 'harald.seiler@aikq.de'
 email_server = 'smtp.aikq.de'
-key_user = 'harald.seiler@aikq.de'
+key_user = email_login_name
 email_recipient = 'dj5my@ok.de'
+
 
 
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QMessageBox
@@ -51,7 +52,7 @@ class MainWindow(QMainWindow):
 
         msg_raw = self.textBrowser.toPlainText()
         self.textBrowser.clear()
-        msg_data = gpg.encrypt(msg_raw, key_user)
+        msg_data = gpg.encrypt(msg_raw, key_user, always_trust=True, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
         msg = str(msg_data)
         subj = '...'
         frm = email_login_name
@@ -74,10 +75,21 @@ class MainWindow(QMainWindow):
         compare_str = '-----BEGIN PGP MESSAGE-----'
         if self.textBrowser.find(compare_str, QTextDocument.FindBackward) :
             encrypted_msg = self.textBrowser.toPlainText()
+            verified = gpg.verify(encrypted_msg)
             decrypted_msg = gpg.decrypt(encrypted_msg)
+            
+            validSig = False
             msgbox = QMessageBox()
-            msgbox.setWindowTitle('entschlüsselter Text:')
+            if decrypted_msg.trust_level is not None:
+                msgbox.setWindowTitle('%s' % decrypted_msg.username)     
+                validSig = True
+            else:
+                msgbox.setWindowTitle("Mail nicht signiert!")
             msgbox.setText(str(decrypted_msg))
+            if validSig:   
+                msgbox.setInformativeText("<font color=\"green\">gültige Signatur von:\n%s</font>" % decrypted_msg.username)
+            else:
+                msgbox.setInformativeText("<font color=\"red\">Mail nicht signiert!</font>")
             msgbox.show()
             msgbox.exec()    
             self.textBrowser.clear()    
