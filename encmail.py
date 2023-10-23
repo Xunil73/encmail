@@ -48,28 +48,34 @@ class MainWindow(QMainWindow):
 
 
     def on_clicked(self):
-        gpg = gnupg.GPG(gnupghome=gnupg_dir)
+        try:
+            gpg = gnupg.GPG(gnupghome=gnupg_dir)
+            msg_raw = self.textBrowser.toPlainText()
+            self.textBrowser.clear()
+            msg_data = gpg.encrypt(msg_raw, key_user)
+            msg = str(msg_data)
+            subj = '...'
+            frm = email_login_name
+            to = email_recipient
 
-        msg_raw = self.textBrowser.toPlainText()
-        self.textBrowser.clear()
-        msg_data = gpg.encrypt(msg_raw, key_user, always_trust=True, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
-        msg = str(msg_data)
-        subj = '...'
-        frm = email_login_name
-        to = email_recipient
+            mail = MIMEText(msg, 'plain', 'utf-8')
+            mail['Subject'] = Header(subj, 'utf-8')
+            mail['From'] = frm
+            mail['To'] = to
+        except ValueError as e:
+            errormsg = "gpg error:\n" + str(e)
+            self.show_exception_box(errormsg)
+        try:
+            smtp = smtplib.SMTP(email_server)
+            smtp.starttls()
+            smtp.login(email_login_name, keyring.get_password("email", key_user))
+            smtp.sendmail(frm, [to], mail.as_string())
+            smtp.quit()
+            app.quit()
+        except BaseException as e:
+            errormsg = "mailserver error\n" + str(e)            
+            self.show_exception_box(errormsg)
 
-        mail = MIMEText(msg, 'plain', 'utf-8')
-        mail['Subject'] = Header(subj, 'utf-8')
-        mail['From'] = frm
-        mail['To'] = to
-
-        smtp = smtplib.SMTP(email_server)
-        smtp.starttls()
-        smtp.login(email_login_name, keyring.get_password("email", email_login_name))
-        smtp.sendmail(frm, [to], mail.as_string())
-        smtp.quit()
-        app.quit()
-        
     def on_text_changed(self):
         gpg = gnupg.GPG(gnupghome=gnupg_dir)
         compare_str = '-----BEGIN PGP MESSAGE-----'
@@ -94,6 +100,16 @@ class MainWindow(QMainWindow):
             msgbox.show()
             msgbox.exec()    
             self.textBrowser.clear()    
+
+    def show_exception_box(self, errormsg):
+        msgbox = QMessageBox()
+        msgbox.setWindowTitle('Fehler')
+        msgbox.setInformativeText(errormsg)
+        msgbox.setStandardButtons(QMessageBox.Cancel)
+        msgbox.setIcon(QMessageBox.Critical)
+        msgbox.show()
+        msgbox.exec()
+        app.quit()
 
 app = QApplication(sys.argv)
 
