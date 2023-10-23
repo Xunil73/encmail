@@ -85,7 +85,8 @@ class MainWindow(QMainWindow):
                 validSig = True
             else:
                 msgbox.setWindowTitle("Mail nicht signiert!")
-            msgbox.setText(str(decrypted_msg))
+            # this is the only way to get the german umlauts working:
+            msgbox.setText(str(decrypted_msg).encode('latin-1').decode('latin-1'))
             if validSig:   
                 msgbox.setInformativeText("<font color=\"green\">gültige Signatur von:\n%s</font>" % decrypted_msg.username)
             else:
