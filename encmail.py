@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
             gpg = gnupg.GPG(gnupghome=gnupg_dir)
             msg_raw = self.textBrowser.toPlainText()
             self.textBrowser.clear()
-            msg_data = gpg.encrypt(msg_raw, key_user)
+            msg_data = gpg.encrypt(msg_raw, email_recipient, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
             msg = str(msg_data)
             subj = '...'
             frm = email_login_name
