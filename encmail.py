@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("encrypted mail")
 
-        self.button = QPushButton("sicher Senden")
+        self.button = QPushButton("verschlüsselt senden")
         self.textBrowser = QTextEdit()
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.textBrowser)
@@ -48,6 +48,9 @@ class MainWindow(QMainWindow):
 
 
     def on_clicked(self):
+        self.button.setStyleSheet('color: green')
+        self.button.setText("senden...")
+        self.button.repaint()
         try:
             gpg = gnupg.GPG(gnupghome=gnupg_dir)
             msg_raw = self.textBrowser.toPlainText()
