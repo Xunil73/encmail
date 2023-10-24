@@ -1,3 +1,4 @@
-# hier ist noch genügend zu tun ;-)
+# Fehlerbehandlung wenn Text gepasted wird der die Verschlüsselungssyntax nicht einhält fehlt
+
 
 
