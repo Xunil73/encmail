@@ -46,11 +46,11 @@ class MainWindow(QMainWindow):
         self.button.clicked.connect(self.on_clicked)
         self.textBrowser.textChanged.connect(self.on_text_changed)
 
-
+    # fetch the typed text, encrypt and sign it and send it to recipient
     def on_clicked(self):
         self.button.setStyleSheet('color: green')
         self.button.setText("senden...")
-        self.button.repaint()
+        self.button.repaint()    # we have to repaint the button because the code doesnt reach the event loop
         try:
             gpg = gnupg.GPG(gnupghome=gnupg_dir)
             msg_raw = self.textBrowser.toPlainText()
@@ -79,6 +79,7 @@ class MainWindow(QMainWindow):
             errormsg = "mailserver error\n" + str(e)            
             self.show_exception_box(errormsg)
 
+    # fetch the pasted text, decrypt and verify the signature and display it
     def on_text_changed(self):
         gpg = gnupg.GPG(gnupghome=gnupg_dir)
         compare_str = '-----BEGIN PGP MESSAGE-----'
