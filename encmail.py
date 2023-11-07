@@ -14,7 +14,7 @@ email_recipient = 'dj5my@ok.de'
 
 
 
-from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QMessageBox, QGroupBox, QCheckBox, QGridLayout, QScrollArea
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QTextDocument
 import sys
@@ -23,6 +23,26 @@ from email.header import Header
 import smtplib
 import keyring
 import gnupg
+
+class ChooseRecipientsWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+      
+        gpg=gnupg.GPG(gnupghome='/home/harry/.gnupg')
+        pubkeys=gpg.list_keys()
+        emails = []
+        for element in pubkeys:
+            emails.extend(element['uids'])
+   
+        vbox=QVBoxLayout()
+        excludes = ["signing", "Debian", "Tails", "Qubes", "Release", "Kali", "Archlinux", "Eddie", "Ubuntu",
+                    "Signing", "VeraCrypt", "Mint"]
+        for email in emails:
+            if any(x in email for x in excludes):
+                continue
+            checkbox = QCheckBox(email)
+            vbox.addWidget(checkbox)
+        self.setLayout(vbox)
 
 
 class MainWindow(QMainWindow):
@@ -45,39 +65,6 @@ class MainWindow(QMainWindow):
 
         self.button.clicked.connect(self.on_clicked)
         self.textBrowser.textChanged.connect(self.on_text_changed)
-
-    # fetch the typed text, encrypt and sign it and send it to recipient
-    def on_clicked(self):
-        self.button.setStyleSheet('color: green')
-        self.button.setText("senden...")
-        self.button.repaint()    # we have to repaint the button because the code doesnt reach the event loop
-        try:
-            gpg = gnupg.GPG(gnupghome=gnupg_dir)
-            msg_raw = self.textBrowser.toPlainText()
-            self.textBrowser.clear()
-            msg_data = gpg.encrypt(msg_raw, email_recipient, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
-            msg = str(msg_data)
-            subj = '...'
-            frm = email_login_name
-            to = email_recipient
-
-            mail = MIMEText(msg, 'plain', 'utf-8')
-            mail['Subject'] = Header(subj, 'utf-8')
-            mail['From'] = frm
-            mail['To'] = to
-        except ValueError as e:
-            errormsg = "gpg error:\n" + str(e)
-            self.show_exception_box(errormsg)
-        try:
-            smtp = smtplib.SMTP(email_server)
-            smtp.starttls()
-            smtp.login(email_login_name, keyring.get_password("email", key_user))
-            smtp.sendmail(frm, [to], mail.as_string())
-            smtp.quit()
-            app.quit()
-        except BaseException as e:
-            errormsg = "mailserver error\n" + str(e)            
-            self.show_exception_box(errormsg)
 
     # fetch the pasted text, decrypt and verify the signature and display it
     def on_text_changed(self):
@@ -114,6 +101,45 @@ class MainWindow(QMainWindow):
         msgbox.show()
         msgbox.exec()
         app.quit()
+
+    def on_clicked(self):
+        self.choosenRecip=ChooseRecipientsWindow()
+        self.choosenRecip.show()
+
+    # fetch the typed text, encrypt and sign it and send it to recipient
+    def sendMail(self):
+        self.button.setStyleSheet('color: green')
+        self.button.setText("senden...")
+        self.button.repaint()    # we have to repaint the button because the code doesnt reach the event loop
+        try:
+            gpg = gnupg.GPG(gnupghome=gnupg_dir)
+            msg_raw = self.textBrowser.toPlainText()
+            self.textBrowser.clear()
+            msg_data = gpg.encrypt(msg_raw, email_recipient, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
+            msg = str(msg_data)
+            subj = '...'
+            frm = email_login_name
+            to = email_recipient
+
+            mail = MIMEText(msg, 'plain', 'utf-8')
+            mail['Subject'] = Header(subj, 'utf-8')
+            mail['From'] = frm
+            mail['To'] = to
+        except ValueError as e:
+            errormsg = "gpg error:\n" + str(e)
+            self.show_exception_box(errormsg)
+        try:
+            smtp = smtplib.SMTP(email_server)
+            smtp.starttls()
+            smtp.login(email_login_name, keyring.get_password("email", key_user))
+            smtp.sendmail(frm, [to], mail.as_string())
+            smtp.quit()
+            app.quit()
+        except BaseException as e:
+            errormsg = "mailserver error\n" + str(e)            
+            self.show_exception_box(errormsg)
+
+
 
 app = QApplication(sys.argv)
 
