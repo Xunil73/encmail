@@ -15,7 +15,7 @@ email_recipient = 'dj5my@ok.de'
 
 
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QMessageBox, QGroupBox, QCheckBox, QGridLayout, QScrollArea
-from PySide6.QtCore import QObject
+from PySide6.QtCore import Qt, QObject
 from PySide6.QtGui import QTextDocument
 import sys
 from email.mime.text import MIMEText
@@ -24,7 +24,7 @@ import smtplib
 import keyring
 import gnupg
 
-class ChooseRecipientsWindow(QWidget):
+class ChooseRecipientsWindow(QMainWindow):
     def __init__(self):
         super().__init__()
       
@@ -33,17 +33,29 @@ class ChooseRecipientsWindow(QWidget):
         emails = []
         for element in pubkeys:
             emails.extend(element['uids'])
-   
-        vbox=QVBoxLayout()
+
         excludes = ["signing", "Debian", "Tails", "Qubes", "Release", "Kali", "Archlinux", "Eddie", "Ubuntu",
                     "Signing", "VeraCrypt", "Mint"]
+
+        self.scroll = QScrollArea()
+        self.widget = QWidget()
+        self.vbox = QVBoxLayout()
         for email in emails:
             if any(x in email for x in excludes):
                 continue
             checkbox = QCheckBox(email)
-            vbox.addWidget(checkbox)
-        self.setLayout(vbox)
+            self.vbox.addWidget(checkbox)
 
+        self.widget.setLayout(self.vbox)
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.widget)
+        self.setCentralWidget(self.scroll)
+
+        self.setGeometry(600, 100, 600, 300)
+        self.setWindowTitle('Scroll Area Demo')
+     
 
 class MainWindow(QMainWindow):
     def __init__(self):
