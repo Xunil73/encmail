@@ -14,7 +14,7 @@ email_recipient = 'dj5my@ok.de'
 
 
 
-from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QMessageBox, QGroupBox, QCheckBox, QGridLayout, QScrollArea
+from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QMessageBox, QGroupBox, QCheckBox, QGridLayout, QScrollArea, QDialogButtonBox
 from PySide6.QtCore import Qt, QObject
 from PySide6.QtGui import QTextDocument
 import sys
@@ -35,7 +35,7 @@ class ChooseRecipientsWindow(QMainWindow):
             emails.extend(element['uids'])
 
         excludes = ["signing", "Debian", "Tails", "Qubes", "Release", "Kali", "Archlinux", "Eddie", "Ubuntu",
-                    "Signing", "VeraCrypt", "Mint"]
+                    "Signing", "VeraCrypt", "Mint", "testschluessel_"]
 
         self.scroll = QScrollArea()
         self.widget = QWidget()
@@ -46,6 +46,9 @@ class ChooseRecipientsWindow(QMainWindow):
             checkbox = QCheckBox(email)
             self.vbox.addWidget(checkbox)
 
+        self.buttonbox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.vbox.addWidget(self.buttonbox)
+
         self.widget.setLayout(self.vbox)
         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -53,9 +56,10 @@ class ChooseRecipientsWindow(QMainWindow):
         self.scroll.setWidget(self.widget)
         self.setCentralWidget(self.scroll)
 
-        self.setGeometry(600, 100, 600, 300)
+        self.setGeometry(600, 100, 800, 600)
         self.setWindowTitle('Scroll Area Demo')
-     
+    
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -63,7 +67,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("encrypted mail")
 
-        self.button = QPushButton("verschlüsselt senden")
+        self.button = QPushButton("Empfänger auswählen")
         self.textBrowser = QTextEdit()
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.textBrowser)
@@ -117,6 +121,7 @@ class MainWindow(QMainWindow):
     def on_clicked(self):
         self.choosenRecip=ChooseRecipientsWindow()
         self.choosenRecip.show()
+
 
     # fetch the typed text, encrypt and sign it and send it to recipient
     def sendMail(self):
