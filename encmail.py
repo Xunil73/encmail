@@ -24,6 +24,7 @@ import smtplib
 import keyring
 import gnupg
 
+
 class ChooseRecipientsWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -40,14 +41,17 @@ class ChooseRecipientsWindow(QMainWindow):
         self.scroll = QScrollArea()
         self.widget = QWidget()
         self.vbox = QVBoxLayout()
+        self.checkboxes=[]
         for email in emails:
             if any(x in email for x in excludes):
                 continue
             checkbox = QCheckBox(email)
+            self.checkboxes += [checkbox]
             self.vbox.addWidget(checkbox)
 
         self.buttonbox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.vbox.addWidget(self.buttonbox)
+
 
         self.widget.setLayout(self.vbox)
         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -59,7 +63,24 @@ class ChooseRecipientsWindow(QMainWindow):
         self.setGeometry(600, 100, 800, 600)
         self.setWindowTitle('Scroll Area Demo')
     
+        self.buttonbox.button(QDialogButtonBox.Ok).clicked.connect(self.ok_clicked)
+        self.buttonbox.button(QDialogButtonBox.Cancel).clicked.connect(self.cancel_clicked)
 
+    def cancel_clicked(self):
+        app.quit()
+
+    def ok_clicked(self):
+        recipients = ''
+        for c in self.checkboxes:
+            if c.isChecked():
+                if c.text().find('<') == -1:
+                    recipients += c.text() + ', '
+                else:
+                    tmp = c.text().split('<')                                
+                    recipients += tmp[1].replace('>', ', ')            
+                
+        #sendMail()
+        printRec(recipients)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -108,15 +129,6 @@ class MainWindow(QMainWindow):
             msgbox.exec()    
             self.textBrowser.clear()    
 
-    def show_exception_box(self, errormsg):
-        msgbox = QMessageBox()
-        msgbox.setWindowTitle('Fehler')
-        msgbox.setInformativeText(errormsg)
-        msgbox.setStandardButtons(QMessageBox.Cancel)
-        msgbox.setIcon(QMessageBox.Critical)
-        msgbox.show()
-        msgbox.exec()
-        app.quit()
 
     def on_clicked(self):
         self.choosenRecip=ChooseRecipientsWindow()
@@ -124,38 +136,48 @@ class MainWindow(QMainWindow):
 
 
     # fetch the typed text, encrypt and sign it and send it to recipient
-    def sendMail(self):
-        self.button.setStyleSheet('color: green')
-        self.button.setText("senden...")
-        self.button.repaint()    # we have to repaint the button because the code doesnt reach the event loop
-        try:
-            gpg = gnupg.GPG(gnupghome=gnupg_dir)
-            msg_raw = self.textBrowser.toPlainText()
-            self.textBrowser.clear()
-            msg_data = gpg.encrypt(msg_raw, email_recipient, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
-            msg = str(msg_data)
-            subj = '...'
-            frm = email_login_name
-            to = email_recipient
+def sendMail():
 
-            mail = MIMEText(msg, 'plain', 'utf-8')
-            mail['Subject'] = Header(subj, 'utf-8')
-            mail['From'] = frm
-            mail['To'] = to
-        except ValueError as e:
-            errormsg = "gpg error:\n" + str(e)
-            self.show_exception_box(errormsg)
-        try:
-            smtp = smtplib.SMTP(email_server)
-            smtp.starttls()
-            smtp.login(email_login_name, keyring.get_password("email", key_user))
-            smtp.sendmail(frm, [to], mail.as_string())
-            smtp.quit()
-            app.quit()
-        except BaseException as e:
-            errormsg = "mailserver error\n" + str(e)            
-            self.show_exception_box(errormsg)
+    try:
+        gpg = gnupg.GPG(gnupghome=gnupg_dir)
+        msg_raw = window.textBrowser.toPlainText() # das gefällt mir nicht. Zugriff auf privates Attribut von QMainWindow.window
+        window.textBrowser.clear() # und hier ändere ich das Textfenster der anderen Klasse...
+        msg_data = gpg.encrypt(msg_raw, email_recipient, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
+        msg = str(msg_data)
+        subj = '...'
+        frm = email_login_name
+        to = email_recipient
 
+        mail = MIMEText(msg, 'plain', 'utf-8')
+        mail['Subject'] = Header(subj, 'utf-8')
+        mail['From'] = frm
+        mail['To'] = to
+    except ValueError as e:
+        errormsg = "gpg error:\n" + str(e)
+        show_exception_box(errormsg)
+    try:
+        smtp = smtplib.SMTP(email_server)
+        smtp.starttls()
+        smtp.login(email_login_name, keyring.get_password("email", key_user))
+        smtp.sendmail(frm, [to], mail.as_string())
+        smtp.quit()
+        app.quit()
+    except BaseException as e:
+        errormsg = "mailserver error\n" + str(e)            
+        show_exception_box(errormsg)
+
+def show_exception_box(errormsg):
+    msgbox = QMessageBox()
+    msgbox.setWindowTitle('Fehler')
+    msgbox.setInformativeText(errormsg)
+    msgbox.setStandardButtons(QMessageBox.Cancel)
+    msgbox.setIcon(QMessageBox.Critical)
+    msgbox.show()
+    msgbox.exec()
+    app.quit()
+
+def printRec(recs):
+    print(recs)
 
 
 app = QApplication(sys.argv)
