@@ -141,6 +141,7 @@ class MainWindow(QMainWindow):
     # fetch the typed text, encrypt and sign it and send it to recipient
 def sendMail(recipients):
 
+    show_sendmessage_box()
     try:
         gpg = gnupg.GPG(gnupghome=gnupg_dir)
         msg_raw = window.textBrowser.toPlainText() # das gefällt mir nicht. Zugriff auf privates Attribut von QMainWindow.window
@@ -177,6 +178,14 @@ def show_exception_box(errormsg):
     msgbox.exec()
     app.quit()
 
+
+def show_sendmessage_box():
+    msgbox = QMessageBox()
+    msgbox.setWindowTitle('sending...')
+    msgbox.setInformativeText('Mail wird gesendet...')
+    msgbox.setIcon(QMessageBox.Information)
+    msgbox.show()
+    msgbox.repaint()
 
 app = QApplication(sys.argv)
 
