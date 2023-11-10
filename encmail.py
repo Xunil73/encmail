@@ -10,7 +10,6 @@ gnupg_dir = '/home/harry/.gnupg'
 email_login_name = 'harald.seiler@aikq.de'
 email_server = 'smtp.aikq.de'
 key_user = email_login_name
-email_recipient = 'dj5my@ok.de'
 
 
 
@@ -35,6 +34,7 @@ class ChooseRecipientsWindow(QMainWindow):
         for element in pubkeys:
             emails.extend(element['uids'])
 
+        # Keys im Keyring mit folgenden Schlagwörtern sollen nicht in der Auswahlliste auftauchen:
         excludes = ["signing", "Debian", "Tails", "Qubes", "Release", "Kali", "Archlinux", "Eddie", "Ubuntu",
                     "Signing", "VeraCrypt", "Mint", "testschluessel_"]
 
@@ -49,6 +49,7 @@ class ChooseRecipientsWindow(QMainWindow):
             self.checkboxes += [checkbox]
             self.vbox.addWidget(checkbox)
 
+        # Es wäre cool wenn ich die Buttonbox noch etwas anders anordnen könnte.... momentan rechts unten versteckt.
         self.buttonbox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.vbox.addWidget(self.buttonbox)
 
@@ -77,10 +78,12 @@ class ChooseRecipientsWindow(QMainWindow):
                     recipients += c.text() + ', '
                 else:
                     tmp = c.text().split('<')                                
-                    recipients += tmp[1].replace('>', ', ')            
+                    recipients += tmp[1].replace('>', ',')            
+        recipients_without_last_comma = recipients[:-1]
+        all_recipients = list(recipients_without_last_comma.split(','))
                 
-        #sendMail()
-        printRec(recipients)
+        sendMail(all_recipients)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -136,22 +139,20 @@ class MainWindow(QMainWindow):
 
 
     # fetch the typed text, encrypt and sign it and send it to recipient
-def sendMail():
+def sendMail(recipients):
 
     try:
         gpg = gnupg.GPG(gnupghome=gnupg_dir)
         msg_raw = window.textBrowser.toPlainText() # das gefällt mir nicht. Zugriff auf privates Attribut von QMainWindow.window
         window.textBrowser.clear() # und hier ändere ich das Textfenster der anderen Klasse...
-        msg_data = gpg.encrypt(msg_raw, email_recipient, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
+        msg_data = gpg.encrypt(msg_raw, recipients, always_trust=True, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
         msg = str(msg_data)
         subj = '...'
-        frm = email_login_name
-        to = email_recipient
-
+        
         mail = MIMEText(msg, 'plain', 'utf-8')
         mail['Subject'] = Header(subj, 'utf-8')
-        mail['From'] = frm
-        mail['To'] = to
+        mail['From'] = email_login_name
+        mail['To'] = ", ".join(recipients)
     except ValueError as e:
         errormsg = "gpg error:\n" + str(e)
         show_exception_box(errormsg)
@@ -159,7 +160,7 @@ def sendMail():
         smtp = smtplib.SMTP(email_server)
         smtp.starttls()
         smtp.login(email_login_name, keyring.get_password("email", key_user))
-        smtp.sendmail(frm, [to], mail.as_string())
+        smtp.sendmail(email_login_name, recipients, mail.as_string())
         smtp.quit()
         app.quit()
     except BaseException as e:
@@ -175,9 +176,6 @@ def show_exception_box(errormsg):
     msgbox.show()
     msgbox.exec()
     app.quit()
-
-def printRec(recs):
-    print(recs)
 
 
 app = QApplication(sys.argv)
