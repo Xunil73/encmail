@@ -23,10 +23,17 @@ import smtplib
 import keyring
 import gnupg
 
+class WorkerSignals(QObject):
+
+    finished = Signal()
+
+
 class Worker(QRunnable):
 
     def __init__(self, all_recipients, unencryptedMessage):
         super(Worker, self).__init__()
+
+        self.signals = WorkerSignals()
 
         self.recipients = all_recipients
         self.msg_raw = unencryptedMessage
@@ -52,11 +59,12 @@ class Worker(QRunnable):
             smtp.login(email_login_name, keyring.get_password("email", key_user))
             smtp.sendmail(email_login_name, self.recipients, mail.as_string())
             smtp.quit()
-            app.quit()
         except BaseException as e:
             errormsg = "mailserver error\n" + str(e)            
             self.show_exception_box(errormsg)
-
+        finally:
+            self.signals.finished.emit()
+        
     def show_exception_box(self, errormsg):
         msgbox = QMessageBox()
         msgbox.setWindowTitle('Fehler')
@@ -65,7 +73,7 @@ class Worker(QRunnable):
         msgbox.setIcon(QMessageBox.Critical)
         msgbox.show()
         msgbox.exec()
-        app.quit()        
+        self.signals.finished.emit()
 
 class ConfirmWindow(QMainWindow):
     def __init__(self):
@@ -125,9 +133,9 @@ class ChooseRecipientsWindow(QMainWindow):
         self.buttonbox.button(QDialogButtonBox.Ok).clicked.connect(self.processing_recipients)
         self.buttonbox.button(QDialogButtonBox.Ok).clicked.connect(self.showConfirmWindow)
         self.buttonbox.button(QDialogButtonBox.Ok).clicked.connect(self.sendEmail)
-        self.buttonbox.button(QDialogButtonBox.Cancel).clicked.connect(self.cancel_clicked)
+        self.buttonbox.button(QDialogButtonBox.Cancel).clicked.connect(self.quitApp)
 
-    def cancel_clicked(self):
+    def quitApp(self):
         app.quit()
 
     def showConfirmWindow(self):
@@ -148,6 +156,7 @@ class ChooseRecipientsWindow(QMainWindow):
 
     def sendEmail(self):
         worker = Worker(self.all_recipients, self.msg_raw)
+        worker.signals.finished.connect(self.quitApp)
         self.threadpool.start(worker)
 
 class MainWindow(QMainWindow):
