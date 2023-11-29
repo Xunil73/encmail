@@ -81,7 +81,9 @@ class ConfirmWindow(QMainWindow):
 
         self.setMinimumSize(QSize(300, 100))
         self.setWindowTitle('processing')
-        title = QLabel('sende Email...')
+        self.setStyleSheet('background-color: blue; border: 3px solid #0f0;')
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        title = QLabel("<font color=\"yellow\">sende Email...</font>")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setCentralWidget(title)
 
@@ -128,7 +130,7 @@ class ChooseRecipientsWindow(QMainWindow):
         self.setCentralWidget(self.scroll)
 
         self.setGeometry(600, 100, 800, 600)
-        self.setWindowTitle('Scroll Area Demo')
+        self.setWindowTitle('Auswahl Empfänger')
     
         self.buttonbox.button(QDialogButtonBox.Ok).clicked.connect(self.processing_recipients)
         self.buttonbox.button(QDialogButtonBox.Ok).clicked.connect(self.showConfirmWindow)
@@ -163,10 +165,11 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("encrypted mail")
+        self.setWindowTitle("EncMail")
 
         self.button = QPushButton("Empfänger auswählen")
         self.textBrowser = QTextEdit()
+        self.textBrowser.setPlaceholderText('Nachricht verfassen\n\noder\n\nCodeblock hier einfügen\n(copy & paste)')
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.textBrowser)
         self.layout.addWidget(self.button)
