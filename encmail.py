@@ -13,9 +13,9 @@ key_user = email_login_name
 
 
 
-from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QMessageBox, QGroupBox, QCheckBox, QGridLayout, QScrollArea, QDialogButtonBox, QLabel
+from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QMessageBox, QGroupBox, QCheckBox, QGridLayout, QScrollArea, QDialogButtonBox, QLabel
 from PySide6.QtCore import Qt, QObject, QRunnable, QThreadPool, Signal, Slot, QSize
-from PySide6.QtGui import QTextDocument
+from PySide6.QtGui import QTextDocument, QPixmap, QImage
 import sys
 from email.mime.text import MIMEText
 from email.header import Header
@@ -79,13 +79,20 @@ class ConfirmWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.widget = QWidget()
         self.setMinimumSize(QSize(300, 100))
         self.setWindowTitle('processing')
         self.setStyleSheet('background-color: blue; border: 3px solid #0f0;')
         self.setWindowFlags(Qt.FramelessWindowHint)
         title = QLabel("<font color=\"yellow\">sende Email...</font>")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setCentralWidget(title)
+        image = QLabel()
+        pixmap = QPixmap('BriefMitSchloss.png')
+        image.setPixmap(pixmap)
+        layout = QHBoxLayout()
+        layout.addWidget(image)
+        layout.addWidget(title)
+        self.widget.setLayout(layout)
+        self.setCentralWidget(self.widget)
 
 
 class ChooseRecipientsWindow(QMainWindow):
