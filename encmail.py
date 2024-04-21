@@ -7,10 +7,10 @@
 # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html
 
 gnupg_dir = '/home/harry/.gnupg'
-email_login_name = 'harald.seiler@aikq.de'
-email_server = 'smtp.aikq.de'
+email_login_name = 'harald.seiler@posteo.de'
+email_server = 'posteo.de'
 key_user = email_login_name
-
+keyring_service = 'gpg_posteo'
 
 
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QMessageBox, QGroupBox, QCheckBox, QGridLayout, QScrollArea, QDialogButtonBox, QLabel
@@ -42,7 +42,7 @@ class Worker(QRunnable):
     def run(self):
         try:
             gpg = gnupg.GPG(gnupghome=gnupg_dir)
-            msg_data = gpg.encrypt(self.msg_raw, self.recipients, always_trust=True, sign=key_user, passphrase=keyring.get_password("gpg_aikq", key_user))
+            msg_data = gpg.encrypt(self.msg_raw, self.recipients, always_trust=True, sign=key_user, passphrase=keyring.get_password(keyring_service, key_user))
             msg = str(msg_data)
             subj = '...'
         
