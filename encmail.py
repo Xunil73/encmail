@@ -10,8 +10,8 @@ gnupg_dir = '/home/harry/.gnupg'
 email_login_name = 'harald.seiler@posteo.de'
 email_server = 'posteo.de'
 key_user = email_login_name
-keyring_service = 'gpg_posteo'
-
+keyring_gpg_service = 'gpg_posteo'
+keyring_email_service = 'email'
 
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QMessageBox, QGroupBox, QCheckBox, QGridLayout, QScrollArea, QDialogButtonBox, QLabel
 from PySide6.QtCore import Qt, QObject, QRunnable, QThreadPool, Signal, Slot, QSize
@@ -42,7 +42,7 @@ class Worker(QRunnable):
     def run(self):
         try:
             gpg = gnupg.GPG(gnupghome=gnupg_dir)
-            msg_data = gpg.encrypt(self.msg_raw, self.recipients, always_trust=True, sign=key_user, passphrase=keyring.get_password(keyring_service, key_user))
+            msg_data = gpg.encrypt(self.msg_raw, self.recipients, always_trust=True, sign=key_user, passphrase=keyring.get_password(keyring_gpg_service, key_user))
             msg = str(msg_data)
             subj = '...'
         
@@ -56,7 +56,7 @@ class Worker(QRunnable):
         try:
             smtp = smtplib.SMTP(email_server)
             smtp.starttls()
-            smtp.login(email_login_name, keyring.get_password("email", key_user))
+            smtp.login(email_login_name, keyring.get_password(keyring_email_service, key_user))
             smtp.sendmail(email_login_name, self.recipients, mail.as_string())
             smtp.quit()
         except BaseException as e:
@@ -110,7 +110,7 @@ class ChooseRecipientsWindow(QMainWindow):
 
         self.threadpool = QThreadPool()
       
-        gpg=gnupg.GPG(gnupghome='/home/harry/.gnupg')
+        gpg=gnupg.GPG(gnupghome=gnupg_dir)
         pubkeys=gpg.list_keys()
         emails = []
         for element in pubkeys:
