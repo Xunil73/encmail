@@ -7,9 +7,6 @@
 # https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html
 
 
-email_login_name = 'harald.seiler@posteo.de'
-email_server = 'posteo.de'
-
 
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QMessageBox, QGroupBox, QCheckBox, QGridLayout, QScrollArea, QDialogButtonBox, QLabel
 from PySide6.QtCore import Qt, QObject, QRunnable, QThreadPool, Signal, Slot, QSize
@@ -21,14 +18,41 @@ import smtplib
 import keyring
 import gnupg
 import os 
+import subprocess
 
 
-conffile='/home/harry/DATA/Entwicklung/git/testarea/python/dateiops/encmail.conf'
+configs={'EMAIL':'', 'SERVER':'', 'GPG_EXCLUDES':''} # we have the config entrys in a dict, read the values from the file
+# the following line must be changed to a hidden file in the basic home directory
+conffile='/home/harry/DATA/Entwicklung/git/encmail/encmail.conf'
 gnupg_dir = os.environ['HOME'] + '/.gnupg'
 keyring_gpg_service = 'gpg_posteo'
 keyring_email_service = 'email'
 
+try:
+  if os.path.isfile(conffile):
+    print("die Datei ist vorhanden")
+    fobj = open(conffile, "r")
+    for line in fobj:
+      if line.find('#') > -1:
+        continue
+      for keyword in configs:
+        if line.find(keyword) > -1:
+          value = line.split(':')
+          temp = value[1].replace("\n", "").replace(" ", "")
+          if temp.find(',') > -1:
+            configs[keyword] = temp.split(',')
+          else: 
+            configs[keyword] = temp
+  else:
+    subcmd="xfce4-terminal -x bash -c \"/home/harry/DATA/Entwicklung/git/encmail/makeEncmailConf.py; exec bash\""
+    subprocess.Popen(subcmd, shell=True)
+    exit(0)
+except:
+  print('Lesefehler bei der Configdatei\n')
 
+email_login_name = configs['EMAIL']
+email_server = configs['SERVER']
+gpg_exclude_tags = configs['GPG_EXCLUDES']
 
 class WorkerSignals(QObject):
 
@@ -124,8 +148,7 @@ class ChooseRecipientsWindow(QMainWindow):
             emails.extend(element['uids'])
 
         # Keys im Keyring mit folgenden Schlagwörtern sollen nicht in der Auswahlliste auftauchen:
-        excludes = ["signing", "Debian", "Tails", "Qubes", "Release", "Kali", "Archlinux", "Eddie", "Ubuntu",
-                    "Signing", "VeraCrypt", "Mint", "testschluessel_"]
+        excludes = gpg_exclude_tags
 
         self.scroll = QScrollArea()
         self.widget = QWidget()
