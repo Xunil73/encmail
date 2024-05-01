@@ -30,7 +30,6 @@ keyring_email_service = 'email'
 
 try:
   if os.path.isfile(conffile):
-    print("die Datei ist vorhanden")
     fobj = open(conffile, "r")
     for line in fobj:
       if line.find('#') > -1:
@@ -46,9 +45,9 @@ try:
   else:
     subcmd="xfce4-terminal -x bash -c \"/home/harry/DATA/Entwicklung/git/encmail/makeEncmailConf.py; exec bash\""
     subprocess.Popen(subcmd, shell=True)
-    exit(0)
-except:
-  print('Lesefehler bei der Configdatei\n')
+    
+except PermissionError:
+  print('keine Berechtigung um auf encmail.conf zuzugreifen\n')
 
 email_login_name = configs['EMAIL']
 email_server = configs['SERVER']
