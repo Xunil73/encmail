@@ -28,6 +28,8 @@ gnupg_dir = os.environ['HOME'] + '/.gnupg'
 keyring_gpg_service = 'gpg_posteo'
 keyring_email_service = 'email'
 
+show_all_windows=True
+
 try:
   if os.path.isfile(conffile):
     fobj = open(conffile, "r")
@@ -43,6 +45,7 @@ try:
           else: 
             configs[keyword] = temp
   else:
+    show_all_windows=False    
     subcmd="xfce4-terminal -x bash -c \"/home/harry/DATA/Entwicklung/git/encmail/makeEncmailConf.py; exec bash\""
     subprocess.Popen(subcmd, shell=True)
     
@@ -264,7 +267,12 @@ app = QApplication(sys.argv)
 
 
 window = MainWindow()
-window.show()  # IMPORTANT!!!!! Windows are hidden by default.
+if show_all_windows == True:
+  window.show()  # IMPORTANT!!!!! Windows are hidden by default.
+else:
+  window.hide()
+  exit(0) # nicht schön aber funktioniert. Die encmail-GUI wird verlassen
+          # da makeEncmailConf.py aufgerufen wurde 
 
 # Start the event loop.
 app.exec()
