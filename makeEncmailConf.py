@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 ### TODO ###
-# rename keyring user 'gpg_posteo' to neutral name in ALL Files
+# rename keyring user 'gpg_service' to neutral name in ALL Files
 ### TODO END ###
 
 import os
@@ -57,7 +57,7 @@ while gpg_passwd_ok != True:
 
 try:
   keyring.set_password("email", emailadress, mail_passwd)
-  keyring.set_password("gpg_posteo", emailadress, gpg_passwd)
+  keyring.set_password("gpg_service", emailadress, gpg_passwd)
 except:
   print("Fehler - Passwörter konnten nicht im Keyring gespeichert werden.")
 finally:

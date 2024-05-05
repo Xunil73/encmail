@@ -25,7 +25,7 @@ configs={'EMAIL':'', 'SERVER':'', 'GPG_EXCLUDES':''} # we have the config entrys
 # the following line must be changed to a hidden file in the basic home directory
 conffile='/home/harry/DATA/Entwicklung/git/encmail/encmail.conf'
 gnupg_dir = os.environ['HOME'] + '/.gnupg'
-keyring_gpg_service = 'gpg_posteo'
+keyring_gpg_service = 'gpg_service'
 keyring_email_service = 'email'
 
 show_all_windows=True
